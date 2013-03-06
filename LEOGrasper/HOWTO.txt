@@ -1,0 +1,15 @@
+compile, and run:
+
+./LEOGrasper --robot icub --part right_arm --file <PATH_TO>graspsettings.ini
+
+
+the file should be loaded then
+(add debug if it isn't!)
+
+set GRASP	can be used from the file
+
+then opn
+and cls
+close it 
+you can also specify the duration of the trajectory
+
