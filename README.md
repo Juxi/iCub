@@ -1,5 +1,4 @@
-iCub
-====
+# iCub Coding Repository
 
 Coding for the iCub humanoid, mainly code developed at the IDSIA Robotics Lab
 
