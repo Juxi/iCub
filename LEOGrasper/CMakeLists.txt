@@ -13,7 +13,7 @@ FIND_PACKAGE ( YARP REQUIRED )
 INCLUDE_DIRECTORIES ( ${YARP_INCLUDE_DIRS} )
 
 SET ( src_files	main.cpp
-				hand_Controller.cpp
+	hand_controller.cpp
 )
 SET ( hdr_files	hand_controller.h)
 
