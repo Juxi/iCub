@@ -1,0 +1,18 @@
+compile it first.
+For running GraspDemo the following other modules need to be running:
+
+ - MoBeE (with a loaded object)
+ - LEOGrasper (with the same part loaded as using in the demo)
+
+bonus but not required: icVision to update the object location
+
+
+./GraspDemo --robot icub  --part right_arm --object cup1
+
+
+then in the rpc port you can send the following:
+star	: start the grasping 
+stop	: stop the grasping
+quit	: close it 
+
+
