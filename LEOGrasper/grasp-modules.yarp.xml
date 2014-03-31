@@ -1,0 +1,22 @@
+<application>
+	<name>Grasp Modules</name>
+	<dependecies>
+		<port>/root</port>
+		
+	</dependecies>
+	<module>
+		<name>LEOGrasper</name>
+		<parameters>--robot icub --part right_arm --file ../graspsettings.ini</parameters>
+		<node>icubvision</node>
+		<tag>Grasper: Right Hand</tag>
+	</module>
+
+	<module>
+		<name>LEOGrasper</name>
+		<parameters>--robot icub --part left_arm --file ../graspsettings.ini</parameters>
+		<node>icubvision</node>
+		<tag>Grasper: Left Hand</tag>
+	</module>
+	<conection>
+	</conection>
+</application>
