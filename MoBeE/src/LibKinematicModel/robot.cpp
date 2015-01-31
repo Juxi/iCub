@@ -237,7 +237,7 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             //xml->visual->origin.position.y,
             //xml->visual->origin.position.z );
             //            if ( qFuzzyIsNull( heightAxis.length() ) ) { heightAxis.setY(1); }
-            heightAxis.setY(1);
+            heightAxis.setZ(1);
             //
             double roll, pitch, yaw;
             xml->visual->origin.rotation.getRPY(roll, pitch, yaw);  //in RAD;
@@ -251,7 +251,7 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             //
             printf("\tOrientation: %f, %f\n", heightAxis.length(), rotAngle);
             //primitive->setSpecialEulerOrientation(heightAxis, rotAngle);
-            //primitive->setSpecialEulerOrientation( heightAxis, rotAngle );
+            primitive->setSpecialEulerOrientation( heightAxis, rotAngle );
             
             /*
              *	SET ITS POSITION
@@ -408,7 +408,7 @@ void Robot::URDFparseJoint(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterfac
 }
 
 PrimitiveObject* Robot::URDFparseGeometry (boost::shared_ptr<urdf::Geometry> geom) {
-    printf("\tLink Geometry Type: %d\t", geom->type);
+//    printf("\tLink Geometry Type: %d\t", geom->type);
     
     PrimitiveObject* primitive;
     try
@@ -416,13 +416,13 @@ PrimitiveObject* Robot::URDFparseGeometry (boost::shared_ptr<urdf::Geometry> geo
         if ( geom->type == urdf::Geometry::SPHERE ) {
             boost::shared_ptr<urdf::Sphere> sph = boost::dynamic_pointer_cast<urdf::Sphere>(geom);
             primitive = new KinematicModel::Sphere( sph->radius );
-            printf("\tSphere %d\n", primitive->getGeomType());
         }
         else if ( geom->type == urdf::Geometry::CYLINDER ) {
             boost::shared_ptr<urdf::Cylinder> cyl = boost::dynamic_pointer_cast<urdf::Cylinder>(geom);
             primitive = new KinematicModel::Cylinder( cyl->radius, cyl->length );
-            primitive->setCartesianOrientation(<#const QVector3D &rot#>)
-            printf("\tCyl %d\n", primitive->getGeomType());
+            QVector3D upright = QVector3D( M_PI_2, 0.0, 0.0 );
+            primitive->setCartesianOrientation( upright );
+            //primitive->setAxisAngleOrientation( position, 0.0 );
         }
         else if ( geom->type == urdf::Geometry::BOX ) {
             boost::shared_ptr<urdf::Box> box = boost::dynamic_pointer_cast<urdf::Box>(geom);
@@ -431,6 +431,8 @@ PrimitiveObject* Robot::URDFparseGeometry (boost::shared_ptr<urdf::Geometry> geo
                                        box->dim.z);
             primitive = new KinematicModel::Box( size );
             printf("\tBox %d\n", primitive->getGeomType());
+//            QVector3D upright = QVector3D( M_PI_2, 0.0, 0.0 );
+//            primitive->setCartesianOrientation( upright );
         }
         else if (geom->type == urdf::Geometry::MESH) {
             printf("MESH!!!\n");
