@@ -60,8 +60,9 @@ private:
 	bool	metKinTreeTag;
 
 	unsigned int markerCounter;
-	static const Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive;	
-	
+	static const Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive;
+    
+    friend class Robot;
 };
 
 #endif

@@ -18,7 +18,17 @@
 #include "robotobservation.h"
 #include "modelexception.h"
 
+#ifdef ENABLE_URDF
+#include <urdf/model.h>
+#endif
 
+
+#ifndef Q_MOC_RUN
+#ifdef ENABLE_URDFDOM
+#include <urdf_model/model.h>
+#include <urdf_parser/urdf_parser.h>
+#endif
+#endif
 
 namespace KinematicModel
 { 
@@ -50,7 +60,9 @@ public:
 	
 	//bool Robot::isColliding() const;
 	
-	void open(const QString& fileName, bool verbose = true) throw(KinematicModelException);	//!< Parse the XML config file and construct BodyParts, Motors, Links and RevoluteJoints to build up the robot model
+	void open(const QString& fileName, bool verbose = true) throw(KinematicModelException);    //!< Open a robot config file and construct BodyParts, Motors, Links and RevoluteJoints to build up the robot model
+    void openXML(QFile& file, bool verbose) throw(KinematicModelException);     //!< Parse the XML config file and construct BodyParts, Motors, Links and RevoluteJoints to build up the robot model
+    void openURDF(QFile& file, bool verbose) throw(KinematicModelException);    //!< Parse the URDF config file and construct BodyParts, Motors, Links and RevoluteJoints to build up the robot model
 	void appendMarkersToModel();
 	bool isOpen() const	{ return isConfigured; }											//!< Returns whether or not open( const QString& ) has been called (and has succeeded)
 	void close();																			//!< Delete the BodyParts, Motors, Links and RevoluteJoints, returning the Robot to the state it was in just after construction
@@ -89,6 +101,17 @@ public:
 	int	numBodyParts() const { return partList.size();}		//!< Returns the number of BodyParts currently in the list, which is also the index of the next one to be added
 	int numMotors() const { return motorList.size(); }	//!< Returns the number of Motors currently in the list, which is also the index of the next one to be added
 	
+
+/** URDF SECTION, myabe move to seperate file! **/
+#ifdef ENABLE_URDFDOM
+    // keep track of the origin
+    urdf::Pose origin;
+    //    void addURDFLink( boost::shared_ptr< const urdf::Link > xml);
+    void URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface> urdf, std::string linkName);
+    void URDFparseJoint(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface> urdf, std::string jointName);
+    PrimitiveObject* URDFparseGeometry (boost::shared_ptr<urdf::Geometry> geom);
+#endif
+
 
 signals:
 

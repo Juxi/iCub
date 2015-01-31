@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include "model.h"
+#include "box.h"
 #include "sphere.h"
 #include "cylinder.h"
 #include "box.h"
