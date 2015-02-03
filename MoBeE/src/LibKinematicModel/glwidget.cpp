@@ -133,6 +133,13 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
             // zooming in and out
         case '+': zoom -= 0.1; break;
         case '-': zoom += 0.1; break;
+
+            // rotate with keys
+        case Qt::Key_Left:  zRot -= zoom * 75; break;
+        case Qt::Key_Right: zRot += zoom * 75; break;
+        case Qt::Key_Up:    yRot -= zoom * 75; break;
+        case Qt::Key_Down:  yRot += zoom * 75; break;
+
             
         case 'R': // reset the coordinate frame!
             setYRotation(0);
