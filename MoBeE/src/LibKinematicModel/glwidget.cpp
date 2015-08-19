@@ -107,18 +107,18 @@ void GLWidget::removeDisplayList( GL_DisplayList displayList )
 
 void GLWidget::resizeGL(int width, int height)
 {
-	int x,y;
-	if ( width/height > aspect )
+	int x, y;
+	if ( qreal(width)/qreal(height) > aspect )
 	{
-		y = height;
 		x = aspect*height;
+        y = height;
 	}
 	else
 	{
 		x = width;
 		y = width/aspect;
 	}
-	
+
     glViewport((width - x) / 2, (height - y) / 2, x, y);
 
     glMatrixMode(GL_PROJECTION);
@@ -148,6 +148,15 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
             break;
         case 'C': // show the coordingte frame
             showCS = !showCS;
+            break;
+            
+            
+        case 'L':
+            emit reloadStuff();
+            break;
+            
+        case 'Q': // turn it off!
+            printf("not yet implemented");
             break;
         default: QWidget::keyPressEvent(event);
             return;

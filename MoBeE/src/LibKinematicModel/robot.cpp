@@ -12,6 +12,9 @@
 
 using namespace KinematicModel;
 
+int recursion_count;
+
+
 Robot::Robot( Model* m, DT_RespTableHandle robotTable,
                         DT_RespTableHandle fieldTable,
                         DT_ResponseClass robotClass,
@@ -183,6 +186,7 @@ void Robot::openURDF(QFile& file, bool verbose) throw(KinematicModelException)
     // THINK: do we need a bodypart?!?
     // FIXIT: we can only have one bodyparthere!
     BodyPart *bodyPart = NULL;
+    recursion_count = 0;
     if ( (bodyPart = hdl->createChildPart()) ) {
         bodyPart->setName( urdf->getRoot()->name.c_str() );
         URDFparseLink(hdl, urdf, urdf->getRoot()->name);
@@ -197,29 +201,47 @@ void Robot::openURDF(QFile& file, bool verbose) throw(KinematicModelException)
 
 void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface> urdf, std::string linkName) {
     boost::shared_ptr< const urdf::Link > xml = urdf->getLink(linkName);
+
+    recursion_count++;
+    for(int i = 0; i < recursion_count; i++) printf("\t");
+    printf("-----------------------------------------------\n");
+    for(int i = 0; i < recursion_count; i++) printf("\t");
     printf("Link: %s [child: jnts: %lu, lnks: %lu]\n",
            xml->name.c_str(),
            xml->child_joints.size(),
            xml->child_links.size());
     
     if( xml->getParent() == NULL) {
-        printf("no parent --> root!?\n");
+        // orgin? root node?
         origin.clear();
     }
     
-//    QVector3D mainAxis = QVector3D( 0.0, 0.0, 0.0);
+    for(int i = 0; i < recursion_count; i++) printf("\t");
+    printf("Origin: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.z);
+
+    //////////////////////////////////////////////
     
-    printf("\tOrigin: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.z);
+        // THIS IS TODO!!
+    
+    //////////////////////////////////////////////
+    
     // does the link have a visual element assigned?
     if( xml->visual != NULL && xml->visual->geometry != NULL) {
         
-        PrimitiveObject* primitive = URDFparseGeometry(xml->visual->geometry);
+        // look at code from here on down to do fancy maths ;)
+        // and make it work!
         
+        
+        PrimitiveObject* primitive = URDFparseGeometry(xml->visual->geometry);
         if( primitive != NULL ) {
+            for(int i = 0; i < recursion_count; i++) printf("\t");
+            printf("=========== new primitive ----------- \n");
             // only if we have a valid primitive it is added to the node
+
             hdl->node = hdl->createChildLink();
-  //          hdl->node->setNodeAxis(mainAxis);
-            printf("\tNodeAxis: %f, %f, %f", hdl->node->nodeAxis.x(), hdl->node->nodeAxis.y(), hdl->node->nodeAxis.z());
+            //          hdl->node->setNodeAxis(mainAxis);
+            for(int i = 0; i < recursion_count; i++) printf("\t");
+            printf("NodeAxis: %f, %f, %f", hdl->node->nodeAxis.x(), hdl->node->nodeAxis.y(), hdl->node->nodeAxis.z());
             // TODO: FIX: does the element have also an origin tag?
             
             
@@ -241,7 +263,10 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             //
             double roll, pitch, yaw;
             xml->visual->origin.rotation.getRPY(roll, pitch, yaw);  //in RAD;
-            printf("\trpy: %f, %f, %f", roll, pitch, yaw);
+            
+            for(int i = 0; i < recursion_count; i++) printf("\t");
+            printf("rpy: %f, %f, %f\n", roll, pitch, yaw);
+            
             qreal rotAngle = 0.0;
             if( !qFuzzyIsNull(roll) ) {  rotAngle = roll;  heightAxis = rollAxis; }
             if( !qFuzzyIsNull(pitch) ){  rotAngle = pitch; heightAxis = pitchAxis; }
@@ -249,7 +274,8 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             
             //primitive->setCartesianOrientation(QVector3D(0,0,0));
             //
-            printf("\tOrientation: %f, %f\n", heightAxis.length(), rotAngle);
+            for(int i = 0; i < recursion_count; i++) printf("\t");
+            printf("Orientation: %f, %f\n", heightAxis.length(), rotAngle);
             //primitive->setSpecialEulerOrientation(heightAxis, rotAngle);
             primitive->setSpecialEulerOrientation( heightAxis, rotAngle );
             
@@ -261,11 +287,13 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             //                                           xml->visual->origin.position.z );
             pose.position = origin.position + xml->visual->origin.position;
             QVector3D position = QVector3D( pose.position.x,
-                                           pose.position.y,
-                                           pose.position.z );
-            primitive->translate(position);
-            printf("primitive: translation %f, %f, %f\n", position.x(), position.y(), position.z());
+                                            pose.position.y,
+                                            pose.position.z );
+
+//            primitive->translate(position);
+//            printf("primitive translation %f, %f, %f\n", position.x(), position.y(), position.z());
             //primitive->setOpaque();
+        
             
             
             // printf("\tOrigin x: %f\n", xml->visual->origin.position.x);
@@ -279,126 +307,77 @@ void Robot::URDFparseLink(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface
             //        if ( qFuzzyIsNull(height) ) { height = axis.length(); }
             //
             //    axis = height * axis.normalized();
-        
+            
             
             
             //            if(primitive != NULL) {
             hdl->node->appendPrimitive(primitive);
-            printf("\tAdding primitive... \n");
+
+            for(int i = 0; i < recursion_count; i++) printf("\t");
+            printf("Adding primitive... \n");
             //            }
-        }
-    } else
-        printf("No visual tag or geometry tag found for node \"%s\" in the URDF file!", xml->name.c_str());
-    
-    if( xml->child_joints.size() > 0 ) {
-        // Create properties for each joint.
-        typedef std::vector<boost::shared_ptr<urdf::Joint> > M_NameToUrdfJoint;
-        M_NameToUrdfJoint::const_iterator joint_it = xml->child_joints.begin();
-        M_NameToUrdfJoint::const_iterator joint_end = xml->child_joints.end();
-        for( ; joint_it != joint_end; ++joint_it )
-        {
-            const boost::shared_ptr<const urdf::Joint>& urdf_joint = *joint_it;
-            printf("JointName: %s -> %s\n",
-                   urdf_joint->name.c_str(),
-                   urdf_joint->child_link_name.c_str());
             
-            urdf::Pose old_origin = origin;
-            origin = urdf_joint->parent_to_joint_origin_transform;
-            //printf("Jnt moved origin to: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.y);
-            //            joints_[urdf_joint->name] = joint;
-            //
-            //            joint->setRobotAlpha( alpha_ );
-            URDFparseLink(hdl, urdf, urdf_joint->child_link_name);
-            origin = old_origin;
+        } else {
+            printf("No visual tag or geometry tag found for node \"%s\" in the URDF file!", xml->name.c_str());
         }
+        
+        if( xml->child_joints.size() > 0 ) {
+            // Create properties for each joint.
+            typedef std::vector<boost::shared_ptr<urdf::Joint> > M_NameToUrdfJoint;
+            M_NameToUrdfJoint::const_iterator joint_it = xml->child_joints.begin();
+            M_NameToUrdfJoint::const_iterator joint_end = xml->child_joints.end();
+            for( ; joint_it != joint_end; ++joint_it )
+            {
+                const boost::shared_ptr<const urdf::Joint>& urdf_joint = *joint_it;
+
+                for(int i = 0; i < recursion_count; i++) printf("\t");
+                printf("JointName: %s -> %s\n",
+                       urdf_joint->name.c_str(),
+                       urdf_joint->child_link_name.c_str());
+                
+                urdf::Pose old_origin = origin;
+//                origin.position.x += urdf_joint->parent_to_joint_origin_transform.position.x;
+//                origin.position.y += urdf_joint->parent_to_joint_origin_transform.position.y;
+//                origin.position.z += urdf_joint->parent_to_joint_origin_transform.position.z;
+                origin = urdf_joint->parent_to_joint_origin_transform;
+//                origin = origin.position + urdf_joint->parent_to_joint_origin_transform;
+                for(int i = 0; i < recursion_count; i++) printf("\t");
+                printf("Jnt moved origin to: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.y);
+                //            joints_[urdf_joint->name] = joint;
+                //
+                //            joint->setRobotAlpha( alpha_ );
+                primitive->translate(QVector3D(origin.position.x, origin.position.y, origin.position.z));
+                
+                // recurse into it!
+                URDFparseLink(hdl, urdf, urdf_joint->child_link_name);
+                
+                // resetting origin
+                for(int i = 0; i < recursion_count; i++) printf("\t");
+                printf("resetting origin");
+                origin = old_origin;
+            }
+        }
+        
     }
+ 
     
-    if( hdl->node != NULL) { 
+    if( hdl->node != NULL) {
         model->appendObject(hdl->node);
         countCompositeObject();
         hdl->node = hdl->node->parent();
     }
     
+    for(int i = 0; i < recursion_count; i++) printf("\t");
     printf("EndOrigin: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.z);
     
-    //    if( xml->child_links.size() > 0 ) {
-    //        // Create properties for each joint.
-    //        typedef std::vector<boost::shared_ptr<urdf::Link> > UrdfLinks;
-    //        UrdfLinks::const_iterator link_it = xml->child_links.begin();
-    //        for( ; link_it != xml->child_links.end(); ++link_it )
-    //        {
-    //            const boost::shared_ptr<const urdf::Link>& urdf_link = *link_it;
-    //            printf("LinkName: %s \n",
-    //                   urdf_link->name.c_str());
-    //            //
-    //            //            joints_[urdf_joint->name] = joint;
-    //            //
-    //            //            joint->setRobotAlpha( alpha_ );
-    //        }
-    //    }
-    
-    // xml->visual->origin;
-    //    QVector3D axis = QVector3D( xm.value("x").toDouble(),
-    //                               attributes.value("y").toDouble(),
-    //                               attributes.value("z").toDouble() );
-    //    qreal radius = attributes.value("radius").toDouble(),
-    //    height = attributes.value("length").toDouble(),
-    //    rField = attributes.value("field").toDouble();
-    
-    //}
-    
-    //    std::vector< boost::shared_ptr< Joint > > 	 child_joints
-    //    std::vector< boost::shared_ptr< Link > > 	child_links
-    //    boost::shared_ptr< Collision > 	collision
-    //    boost::shared_ptr< Inertial > 	inertial
-    //    std::string 	name
-    //    boost::shared_ptr< Joint > 	parent_joint
-    //    boost::shared_ptr< Visual > 	visual
-    
-    
-    
-    //    void Robot::load( const urdf::ModelInterface &urdf, bool visual, bool collision )
-    //    {
-    // Create properties for each link.
-    //    typedef std::map<std::string, boost::shared_ptr<urdf::Link> > M_NameToUrdfLink;
-    //    M_NameToUrdfLink::const_iterator link_it = urdf->links_.begin();
-    //    M_NameToUrdfLink::const_iterator link_end = urdf->links_.end();
-    //    for( ; link_it != link_end; ++link_it )
-    //    {
-    //        const boost::shared_ptr<const urdf::Link>& urdf_link = link_it->second;
-    //        printf("LinkName: %s \n", urdf_link->name.c_str());
-    //            std::string parent_joint_name;
-    //
-    //            if (urdf_link != urdf->getRoot() && urdf_link->parent_joint)
-    //            {
-    //                parent_joint_name = urdf_link->parent_joint->name;
-    //            }
-    
-    //            RobotLink* link = link_factory_->createLink( this,
-    //                                                        urdf_link,
-    //                                                        parent_joint_name,
-    //                                                        visual,
-    //                                                        collision );
-    
-    //            if (urdf_link == urdf->getRoot())
-    //            {
-    //                root_link_ = link;
-    //            }
-    //    }
-    
-    //
-    //
-    //    // robot is now loaded
-    //    robot_loaded_ = true;
-    //    link_tree_->show();
-    //
-    //    // set the link tree style and add link/joint properties to rviz pane.
-    //    setLinkTreeStyle(LinkTreeStyle(link_tree_style_->getOptionInt()));
-    
+
+    for(int i = 0; i < recursion_count; i++) printf("\t");
     printf("Link FINISHED: %s\n",
            xml->name.c_str());
+    for(int i = 0; i < recursion_count; i++) printf("\t");
+    printf("Origin: %f, %f, %f\n", origin.position.x, origin.position.y, origin.position.z);
     
-    
+    recursion_count--;
 }
 
 void Robot::URDFparseJoint(ZPHandler *hdl, boost::shared_ptr<urdf::ModelInterface> urdf, std::string jointName) {
