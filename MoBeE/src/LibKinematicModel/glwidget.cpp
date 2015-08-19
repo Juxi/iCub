@@ -22,6 +22,7 @@ GLWidget::GLWidget(QWidget *parent)
     xRot = 0;
     yRot = 0;
     zRot = 0;
+    hCtr = wCtr = 0;
 	aspect = 16.0/9.0;
 	zoom = 0.4;   // lower numbers are more zoomed in
     showCS = false;
@@ -134,6 +135,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
         case '+': zoom -= 0.1; break;
         case '-': zoom += 0.1; break;
 
+            // move with keys
             // rotate with keys
         case Qt::Key_Left:  zRot -= zoom * 75; break;
         case Qt::Key_Right: zRot += zoom * 75; break;
@@ -142,9 +144,10 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 
             
         case 'R': // reset the coordinate frame!
-            setYRotation(0);
+            setYRotation(0.0);
             setZRotation(0.0);
             setXRotation(0.0);
+            
             break;
         case 'C': // show the coordingte frame
             showCS = !showCS;

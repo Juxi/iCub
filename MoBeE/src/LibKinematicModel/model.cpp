@@ -54,8 +54,12 @@ Model::Model( bool visualize, bool verb ) : keepRunning(true),
 		QObject::connect( this, SIGNAL(computedState(int)),					modelWindow->glWidget, SLOT(update(int)) );
 		QObject::connect( modelWindow->glWidget, SIGNAL(renderStuff()),		this, SLOT(renderModel()), Qt::DirectConnection );
 
-		//printf("showing model window\n");
-		modelWindow->show();
+        QObject::connect( modelWindow->glWidget, SIGNAL(reloadStuff()),		this, SLOT(reloadModel()), Qt::DirectConnection );
+        
+//		printf("showing model window\n");
+		modelWindow->showNormal();
+		modelWindow->raise();
+        modelWindow->activateWindow();
 		 
 	}
 	
@@ -637,4 +641,9 @@ void Model::renderModel()
 		(*i)->renderField();
 	}
 	
+}
+
+void Model::reloadModel()
+{
+    printf("reloading kinematic model not yet implemented!\n");
 }
