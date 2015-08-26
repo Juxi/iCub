@@ -108,19 +108,10 @@ void GLWidget::removeDisplayList( GL_DisplayList displayList )
 
 void GLWidget::resizeGL(int width, int height)
 {
-	int x, y;
-	if ( qreal(width)/qreal(height) > aspect )
-	{
-		x = aspect*height;
-        y = height;
-	}
-	else
-	{
-		x = width;
-		y = width/aspect;
-	}
+	int x = aspect*height;
+    int y = height;
 
-    glViewport((width - x) / 2, (height - y) / 2, x, y);
+    glViewport((width - x) / 2, (height - y) / 2 , x, y);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
