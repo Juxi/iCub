@@ -15,7 +15,7 @@
 using namespace KinematicModel;
 
 KinTreeNode::KinTreeNode( Robot* robot,
-                         int part,
+                          int part,
 						  KinTreeNode* parent,
 						  NodeType aType ) :	CompositeObject( robot->model->newResponseClass(robot->getResponseTable()),
                                                                  robot->model->newResponseClass(robot->getFieldResponseTable())),

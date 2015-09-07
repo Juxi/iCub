@@ -11,6 +11,7 @@
 #define ROBOT_H
 
 #include <QMutex>
+#include <QVector>
 #include "bodypart.h"
 #include "motor.h"
 #include "link.h"
@@ -58,6 +59,13 @@ public:
           );
 	~Robot();														
 	
+    
+    QVector<KinTreeNode*>	tree;			//!< root nodes of the link/joint trees
+    QVector<Marker*>		markers;		//!< list of markers
+    QVector<BodyPart*>		partList;		//!< "Body Parts" correspond to Yarp motor control groups such as 'torso' and 'leftArm'
+    QVector<Motor*>			motorList;		//!< "Motors" serve as an interface to set the position of one or more joints
+
+    
 	//bool Robot::isColliding() const;
 	
 	void open(const QString& fileName, bool verbose = true) throw(KinematicModelException);    //!< Open a robot config file and construct BodyParts, Motors, Links and RevoluteJoints to build up the robot model
@@ -88,19 +96,40 @@ public:
     DT_ResponseClass	getWorldBaseFieldClass() { return worldBaseFieldClass; }
     
 
-	const QString&	getName() const { return robotName; }				//!< Get the name of the Robot
+    const std::string getName() const { printf("robotName: %s\n", robotName.c_str());
+        return robotName; }				//!< Get the name of the Robot
 	const QString*	getPartName( int partNum ) const;					//!< Get the name of a BodyPart, given its index (usually for printing messages) 
 	const QString*	getMotorName( int partNum, int motorNum ) const;		//!< Get the name of a Motor, given its index and the index of its body part
 	
 	BodyPart*		getPart( int partNum ) const { return partList.at(partNum); }
 	BodyPart*		getPartByName( const QString& partName );					//!< Get the BodyPart itself, given its name
 	Motor*			getMotorByName( const QString& motorName );					//!< Get the moter itself, given its name
-	
-	int				getNumMotors( int partNum ) const;								//!< Get the number of motors in a BodyPart, given its index
 
+	int				getNumMotors( int partNum ) const;						//!< Get the number of motors in a BodyPart, given its index
+
+    // just for debugging
+    void countCompositeObject() { ++numCompositObjects; }
+    
 	int	numBodyParts() const { return partList.size();}		//!< Returns the number of BodyParts currently in the list, which is also the index of the next one to be added
 	int numMotors() const { return motorList.size(); }	//!< Returns the number of Motors currently in the list, which is also the index of the next one to be added
 	
+    void setName( const QString& name )		{ /*myName = name;*/ robotName = name.toStdString(); printf(" set robotName: %s\n", getName().c_str()); }			//!< Sets a human readable name of the robot
+    void appendBodyPart( BodyPart* part )	{ part->setIndex(partList.size()); partList.append(part); }		//!< Appends a BodyPart to the list
+    void appendMotor( Motor* motor )		{ motorList.append(motor); }	//!< Appends a Motor to the list
+    void resizeMotorList( int size )		{ motorList.resize(size); }		//!< Resizes the list of Motors
+    void appendNode( KinTreeNode* node );									//!< Append a root node of a kinematic tree to the list																		/**< In case you want to populate the list in reverse order */
+    
+    int getNumPrimitives();
+    void kill();
+    
+    
+    std::string sayMyName() {
+        printf("Say my name: %s\n", "testing");
+        printf("%c:",  myName[0]);
+        printf("Say my name: %s\n", myName.c_str());
+        return myName;
+    }
+    
 
 /** URDF SECTION, myabe move to seperate file! **/
 #ifdef ENABLE_URDFDOM
@@ -147,7 +176,11 @@ public slots:
 	void ignoreAdjacentPairs();							//!< Turn off collision response (via SOLID) between 'adjacent pairs of objects'. See KinTreeNode.ignoreAdjacentPairs().
 	//void appendTreeToModel( KinTreeNode* node = NULL );
 	
-private:
+
+protected:
+    std::string myName;
+    std::string					robotName;		//!< Human readable identifier for the robot
+        
 	Model*					model;				//!< The Model that is doing collision detection on this Robot
 	DT_RespTableHandle		responseTable,		//!< For managing self-collisions
                             fieldResponseTable; //!< For managing self-repulsion
@@ -156,44 +189,33 @@ private:
                             worldFieldClass,
                             worldBaseFieldClass;
 	
-	QString					robotName;		//!< Human readable identifier for the robot
-	QVector<BodyPart*>		partList;		//!< "Body Parts" correspond to Yarp motor control groups such as 'torso' and 'leftArm'
-	QVector<Motor*>			motorList;		//!< "Motors" serve as an interface to set the position of one or more joints
-	QVector<KinTreeNode*>	tree;			//!< root nodes of the link/joint trees
-	QVector<Marker*>		markers;		//!< list of markers
-	int						numCompositObjects;		//!< Number of KinTreeNodes
+    
+    int						numCompositObjects;		//!< Number of KinTreeNodes
 	bool					isConfigured;	//!<
     //bool                    openWithField;
 	
+    
+    
 	int						numCollisions;
 	int						numReflexCollisions;
     QVector< QVector3D >    force;
 	
 	QMutex mutex;
-	
-    // just for debugging
-    void countCompositeObject() { ++numCompositObjects; }	
-    
 	bool partIdxInRange( int idx ) const;					//!< Check validity of a BodyPart index
 	bool motorIdxInRange( int idx, int partNum ) const;		//!< Check validity of a Motor index
 	
 	
 	//void removeCollisionResponse( DT_ResponseClass c, DT_RespTableHandle t ); //!< Turn off collision response to class c in table t (for the whole robot)
-	
-	void setName( const QString& name )		{ robotName = name; }			//!< Sets a human readable name of the robot
-	void appendBodyPart( BodyPart* part )	{ part->setIndex(partList.size()); partList.append(part); }		//!< Appends a BodyPart to the list
-	void appendMotor( Motor* motor )		{ motorList.append(motor); }	//!< Appends a Motor to the list
-	void resizeMotorList( int size )		{ motorList.resize(size); }		//!< Resizes the list of Motors
-	void appendNode( KinTreeNode* node );									//!< Append a root node of a kinematic tree to the list																		/**< In case you want to populate the list in reverse order */
-	
-	int getNumPrimitives();
-	void kill();
-	
+
+    
 	/*** FRIENDS  ***/
-	friend class BodyPart;
+	friend class PartController;
+    friend class BodyPart;
 	friend class Motor;
-	friend class KinTreeNode;	// root nodes of the link/joint trees must be able to request other root nodes to ignoreAdjacentPairs().
-	friend class ZPHandler;		
+    friend class KinematicModel::KinTreeNode;
+    friend class KinematicModel::Marker;
+        // root nodes of the link/joint trees must be able to request other root nodes to ignoreAdjacentPairs().
+	friend class ZPHandler;
 };
 
 #endif

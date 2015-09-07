@@ -425,10 +425,11 @@ Robot* Model::getRobot( const QString& _name )
 	QVector<Robot*>::iterator i;
 	for ( i=robots.begin(); i!=robots.end(); i++ )
 	{
-		if( (*i)->getName().compare( _name ) == 0 ) // if there's a match
-		{
-			return *i;
-		}
+//        if( std::strcmp((*i)->getName().c_str(), _name) == 0 ) // if there's a match
+////        if( (*i)->getName().compare( _name ) == 0 ) // if there's a match
+//		{
+//			return *i;
+//		}
 	}
 	return NULL;
 }

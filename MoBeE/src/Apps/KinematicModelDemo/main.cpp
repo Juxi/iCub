@@ -24,7 +24,13 @@ int main(int argc, char *argv[])
 					   the model must be started prior to appending objects */
 	
 	printf( "loading robot file: %s\n", argv[1] );
-	model.loadRobot( QString(argv[1]), false );
+    Robot *robot =    model.loadRobot( QString(argv[1]), false );
+
+    //robot->setName("test");
+    robot->sayMyName();
+    std::string name = robot->getName();
+    printf("name: %s", name.c_str());
+
 
 	//printf( "loading world file: %s\n", argv[1] );
 	//model.loadWorld( QString(argv[2]), false );
@@ -36,6 +42,6 @@ int main(int argc, char *argv[])
 	
 	// soup.stop();
 	model.stop();
-	
+    	
 	return result;
 }

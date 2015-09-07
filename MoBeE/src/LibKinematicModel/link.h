@@ -34,7 +34,8 @@ public:
 private:
 	
 	virtual void setM();						//!< Sets the local transformation to be translation (only) in the direction and magnitude of KinTreeNode.nodeAxis
-	
+    
+    friend class Robot;
 };
 
 #endif

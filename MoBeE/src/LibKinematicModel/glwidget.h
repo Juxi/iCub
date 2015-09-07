@@ -56,6 +56,7 @@ public slots:
 signals:
 	
 	//void addedDisplayList( PrimitiveObject* );
+	void reloadStuff();					//!< 
 	void renderStuff();					//!< Connect to RenderList.callLists() or anything that calls DisplayList.render()
     void xRotationChanged(int angle);	//!< see HelloGL example
     void yRotationChanged(int angle);	//!< see HelloGL example
@@ -74,6 +75,9 @@ private:
 	
 	static void drawCS();				//!< Draws a right handed coordinate system at the origin of the OpenGL's 3D cartesian space. (mostly for troubleshooting) 
     void normalizeAngle(int *angle);	//!< see HelloGL example
+
+    int hCtr;				//!< centre, vertically (height) of the GL Viewpoint
+    int wCtr;				//!< centre, horizontally (width) of the GL Viewpoint
 
     int xRot;				//!< see HelloGL example
     int yRot;				//!< see HelloGL example

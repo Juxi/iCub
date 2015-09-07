@@ -211,7 +211,7 @@ bool ZPHandler::startElement( const QString & /* namespaceURI */,
 		/*
 		 *	MAKE A GEOMETRY
 		 */
-		PrimitiveObject* primitive;
+		PrimitiveObject* primitive = NULL;
 		try
 		{
 			if ( QString::compare(qName,"sphere",caseSensitivity) == 0 ) {

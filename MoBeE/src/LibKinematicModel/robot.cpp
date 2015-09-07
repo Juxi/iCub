@@ -21,23 +21,25 @@ Robot::Robot( Model* m, DT_RespTableHandle robotTable,
                         DT_ResponseClass baseClass,
                         DT_ResponseClass robotField,
                         DT_ResponseClass robotBaseField//,                        bool _openWithField
-                                        ) :	model(m),
+                                        ) :
+                                            robotName("unNamedRobot"),
+                                            model(m),
                                             responseTable(robotTable),
                                             fieldResponseTable(fieldTable),
                                             worldRobotClass(robotClass),
                                             worldBaseClass(baseClass),
                                             worldFieldClass(robotField),
                                             worldBaseFieldClass(robotBaseField),
-                                            robotName("unNamedRobot"),
                                             numCompositObjects(0),
                                             isConfigured(false),
                                             //openWithField(_openWithField),
                                             numCollisions(0),
-                                            numReflexCollisions(0)
+                                            numReflexCollisions(0),
+                                            myName ("myName")
 {
 	if ( !robotTable ) { throw KinematicModelException("The Robot constructor requires a valid DT_RespTableHandle."); }
 	qRegisterMetaType< QVector<qreal> >("QVector<qreal>");
-	qRegisterMetaType< RobotObservation >("RobotObservation");
+	qRegisterMetaType< RobotObservation >("RobotObservation");    
 }
 Robot::~Robot()
 {
@@ -49,6 +51,7 @@ Robot::~Robot()
 void Robot::appendNode( KinTreeNode* node )
 {
 	//printf("Called Append KinTreeNode to Robot\n");
+    printf("size: %d\n", tree.size());
 	tree.append(node);
 }
 
@@ -87,7 +90,7 @@ void Robot::open(const QString& fileName, bool verbose) throw(KinematicModelExce
     QFile file(fileName);
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
     {
-        QString errStr = "failed to open file '";
+        QString errStr = "failed to open robot file '";
         errStr.append(fileName);
         errStr.append("'");
         throw KinematicModelException(errStr);
@@ -106,8 +109,9 @@ void Robot::open(const QString& fileName, bool verbose) throw(KinematicModelExce
     ignoreAdjacentPairs();
     home();
     
-    printf("Created Robot: %s (%d kinematic tree nodes, %d primitives)\n",getName().toStdString().c_str(), numCompositObjects, getNumPrimitives());
+    printf("Created Robot: %s (%d kinematic tree nodes, %d primitives)\n", getName().c_str(), numCompositObjects, getNumPrimitives());
     
+    printf("robot created");
     isConfigured = true;
 }
 
@@ -123,7 +127,7 @@ void Robot::openXML(QFile& file, bool verbose) throw(KinematicModelException)
     if ( !reader.parse( xmlInputSource ) )
     {
         QString errStr = "failed to create robot '";
-        errStr.append(getName());
+//        errStr.append(getName());
         errStr.append("' from file '");
         errStr.append(file.fileName());
         errStr.append("'");
@@ -163,14 +167,14 @@ void Robot::openURDF(QFile& file, bool verbose) throw(KinematicModelException)
     /** We need a body part, maybe this needs to be investigated a bit closer **/
     // hack: look at this
     BodyPart* existingBodyPart;
-    if ( (existingBodyPart = getPartByName(getName())) != NULL ) {
+    if ( (existingBodyPart = getPartByName(QString(getName().c_str()))) != NULL ) {
         hdl->bodyPart = existingBodyPart; // if the branch by this name already exists, use the prexisting one
     } else {
         // make a new one
         if ( !(hdl->bodyPart = hdl->createChildPart()) ) {
             printf("ERROR! Could not create a body part!");
         }
-        hdl->bodyPart->setName( getName() );
+        hdl->bodyPart->setName( getName().c_str() );
     }
     
     if ( !hdl->bodyPart->verify() ) {

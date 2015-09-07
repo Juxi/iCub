@@ -91,6 +91,8 @@ public:
 public slots:
 	
 	void renderModel();
+    
+    void reloadModel();
 	
 signals:
 	
@@ -160,6 +162,7 @@ protected:
 	ObjectMover *objectMover;			//!< Object mover
 
 	friend class Robot;
+	friend class YarpRobot;
 	friend class KinTreeNode;
 
 	DT_Bool stopOnFirstCollision;
@@ -246,6 +249,9 @@ protected:
         
 		return DT_CONTINUE;
 	}
+    
+    friend class KinematicModel::Robot;
+    friend class KinematicModel::Link;
 };
 
 #endif
