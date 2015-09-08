@@ -8,6 +8,8 @@
 #include "worldhandler.h"
 #include "modelwindow.h"
 #include <iostream>
+#include "SOLID.h"
+
 
 using namespace KinematicModel;
 
@@ -17,6 +19,7 @@ Model::Model( bool visualize, bool verb ) : keepRunning(true),
 											encObstacle(false),
 											verbose(verb),
 											syncGraphics(true),
+                                            showFields(true),
                                             modelWindow(NULL),
                                             numObjects(0),
 											numPrimitives(0),
@@ -54,18 +57,20 @@ Model::Model( bool visualize, bool verb ) : keepRunning(true),
 		QObject::connect( this, SIGNAL(computedState(int)),					modelWindow->glWidget, SLOT(update(int)) );
 		QObject::connect( modelWindow->glWidget, SIGNAL(renderStuff()),		this, SLOT(renderModel()), Qt::DirectConnection );
 
+        // user interaction
+        QObject::connect( modelWindow->glWidget, SIGNAL(toggleField()),		this, SLOT(toggleFieldsVis()), Qt::DirectConnection );
         QObject::connect( modelWindow->glWidget, SIGNAL(reloadStuff()),		this, SLOT(reloadModel()), Qt::DirectConnection );
         
-//		printf("showing model window\n");
+		printf("showing model window\n");
 		modelWindow->showNormal();
 		modelWindow->raise();
         modelWindow->activateWindow();
 		 
 	}
 	
-	objectMover = new ObjectMover(this, &robots);
-
-	//printf("model constructor returns\n");
+//	objectMover = new ObjectMover(this, &robots);
+    
+	printf("model constructor returns\n");
 }
 
 Model::~Model()
@@ -87,7 +92,7 @@ Model::~Model()
 	
 	cleanTheWorld();
 	
-	delete objectMover;
+//	delete objectMover;
 
 	if ( modelWindow ) { delete(modelWindow); }
 	
@@ -216,9 +221,77 @@ Robot* Model::loadRobot( const QString& fileName, bool verbose)
 	mutexData.unlock();
 
 	robot->appendMarkersToModel();
+    
+    
+    QString newTitle = modelWindow->windowTitle();
+    newTitle.append(" <");
+    newTitle.append(robot->getName().c_str());
+    newTitle.append(">");
+    modelWindow->setWindowTitle(newTitle);
+    
 
 	return robot;
 }
+
+
+Robot* Model::loadYarpRobot( const QString& fileName, bool verbose )
+{
+    printf("In: loadYarpRobot()\n");
+    mutexData.lockForWrite();
+    
+    DT_ResponseClass newRobotClass     = newResponseClass( worldTable );
+    DT_ResponseClass newBaseClass      = newResponseClass( worldTable );
+    DT_ResponseClass newFieldClass     = newResponseClass( worldTable );
+    DT_ResponseClass newBaseFieldClass = newResponseClass( worldTable );
+    
+    DT_AddPairResponse(	worldTable, newRobotClass, obstacleClass, reflexTrigger, DT_WITNESSED_RESPONSE, (void*) this );
+    DT_AddPairResponse(	worldTable, newRobotClass, obstacleClass, collisionHandler, DT_WITNESSED_RESPONSE, (void*) this );
+    DT_AddPairResponse(	worldTable, newRobotClass, targetClass,   collisionHandler, DT_WITNESSED_RESPONSE, (void*) this );
+    DT_AddPairResponse(	worldTable, newFieldClass, obstacleClass, repel, DT_DEPTH_RESPONSE, (void*) this );
+    DT_AddPairResponse(	worldTable, newFieldClass, obstacleClass, collisionHandler, DT_WITNESSED_RESPONSE, (void*) this );
+    
+    QVector<DT_ResponseClass>::iterator i;
+    for ( i = robotResponseClasses.begin(); i != robotResponseClasses.end(); ++i )
+    {
+        DT_AddPairResponse(	worldTable, newRobotClass,        *i, reflexTrigger, DT_WITNESSED_RESPONSE, (void*) this );
+        DT_AddPairResponse(	worldTable, newBaseClass,         *i, reflexTrigger,  DT_WITNESSED_RESPONSE, (void*) this );
+        DT_AddPairResponse(	worldTable, newFieldClass,        *i, repel,         DT_DEPTH_RESPONSE, (void*) this );
+        DT_AddPairResponse(	worldTable, newBaseFieldClass,    *i, repel,     DT_DEPTH_RESPONSE, (void*) this );
+    }
+    
+    robotResponseClasses.append( newRobotClass );
+    robotResponseClasses.append( newFieldClass );
+    //fieldResponseClasses.append( newFieldClass );
+    //robotBaseClasses.append( newBaseClass );
+    
+    //printf("Loading non-yarp robot.\n");
+    DT_RespTableHandle newTable = newRobotTable();              // a table for handling self collisions
+    DT_RespTableHandle newFieldTable = newRobotFieldTable();	// a table for handling self repulsion
+    
+    
+//    YarpRobot* robot = new YarpRobot( this,
+    Robot* robot = new Robot( this,
+                                     newTable,
+                                     newFieldTable,
+                                     newRobotClass,
+                                     newBaseClass,
+                                     newFieldClass,
+                                     newBaseFieldClass );
+    
+    mutexData.unlock();
+    
+    robot->open( fileName, verbose ); // open calls appendObject, which locks the mutex by itself
+    
+    mutexData.lockForWrite();
+    robots.append( robot );
+    mutexData.unlock();
+    
+    // these are normal objects not KintreeNodes.  Appending them locks the model mutex
+    // TODO fix this robot->appendMarkersToModel();
+    
+    return robot;
+}
+
 
 void Model::loadWorld( const QString& fileName, bool verbose )
 {
@@ -400,7 +473,7 @@ QVector< QString > Model::listWorldObjects()
 
 void Model::grabObject( CompositeObject* object, Robot* robot, int markerIndex ) {
 	QReadLocker locker(&mutexData);
-	objectMover->grabObject( object, robot, markerIndex );
+//	objectMover->grabObject( object, robot, markerIndex );
 }
 
 
@@ -464,7 +537,7 @@ void Model::cleanTheWorld()
 				//if (verbose) printf(" no pending display lists\n");
 				CompositeObject* dyingObject = *i;	// get a non-iterator ref to the object in question
 				removeWorldObject( dyingObject );	// this would f*** up the iterator passed to it because we call QVector::erase( <T> ) inside here
-				objectMover->check();				// check objectMover lists and remove object if necessary
+//				objectMover->check();				// check objectMover lists and remove object if necessary
 				delete( dyingObject );				// and delete the object from memory
 			}
 			//else
@@ -584,7 +657,7 @@ void Model::updateWorldState()
 	for ( i=robots.begin(); i!=robots.end(); ++i ) {
 		(*i)->updatePose();
 	}
-	objectMover->update();  // update object positions that are attached to the robots' markers
+//	objectMover->update();  // update object positions that are attached to the robots' markers
 	mutexData.unlock();
 }
 
@@ -637,14 +710,42 @@ void Model::renderModel()
 	{
 		(*i)->render();
 	}
-    for ( i=world.begin(); i!=world.end(); ++i )
-	{
-		(*i)->renderField();
-	}
+    if( showFields )
+    {
+        for ( i=world.begin(); i!=world.end(); ++i )
+        {
+            (*i)->renderField();
+        }
+    }
 	
 }
 
 void Model::reloadModel()
 {
-    printf("reloading kinematic model not yet implemented!\n");
+    // clean all the robots (somehow!)
+//    robots.clear(); <-- does not work
+
+    // remove the pointer to every object from the world vector // a bit hacky!
+    
+    QVector<CompositeObject*>::iterator i;
+    for ( i=world.end(); i!=world.begin(); )
+    {
+        --i;
+        if ( *i )
+        {
+            if (verbose) printf(" removing object from world vector\n");
+            removeWorldObject(*i);
+        }
+    }
+    
+
+    // load robot again
+    loadYarpRobot( "/Users/leitnerj/Code/iCub/MoBeE/xml/Baxter.xml" );
+
+//        printf( "robot <%s> is loaded\n", robot->getName().c_str());
+//    printf("reloading kinematic model not yet implemented!\n");
+}
+
+void Model::toggleFieldsVis() {
+    showFields = !showFields;
 }

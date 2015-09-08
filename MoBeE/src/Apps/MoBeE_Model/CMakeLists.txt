@@ -1,5 +1,5 @@
-# Copyright: (C) 2010-2015 Mikhail Frank, Juxi Leitner
-# Authors: Mikhail Frank, Juxi Leitner
+# Copyright: (C) 2010 Mikhail Frank
+# Author: Mikhail Frank
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 CMAKE_MINIMUM_REQUIRED ( VERSION 2.6 )
@@ -79,5 +79,4 @@ TARGET_LINK_LIBRARIES ( MoBeE	YarpModel
 INSTALL ( TARGETS MoBeE DESTINATION ${CMAKE_SOURCE_DIR}/bin )
 
 ADD_SUBDIRECTORY ( ../../LibYarpModel ${CMAKE_CURRENT_BINARY_DIR}/LibYarpModel )
-ADD_SUBDIRECTORY( Demo )
 

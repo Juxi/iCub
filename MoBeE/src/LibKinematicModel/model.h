@@ -19,7 +19,7 @@
 #include "primitiveobject.h"
 #include "modelexception.h"
 #include "modelconstants.h"
-#include "objectmover.h"
+//#include "objectmover.h"
 
 namespace KinematicModel
 {
@@ -75,6 +75,7 @@ public:
 	Robot* getRobot( const QString& name );
 	
 	Robot*	loadRobot( const QString& fileName, bool verbose = true );
+	Robot*	loadYarpRobot( const QString& fileName, bool verbose = true );
 	void	loadWorld( const QString& fileName, bool verbose = true );
 	
 	DT_SceneHandle		getScene() const { return scene; }
@@ -88,11 +89,13 @@ public:
     
     int getNumCollisions() { return col_count; }
 	
-public slots:
-	
-	void renderModel();
     
+    
+public slots:
+    
+	void renderModel();
     void reloadModel();
+    void toggleFieldsVis();
 	
 signals:
 	
@@ -105,7 +108,6 @@ protected:
 	DT_RespTableHandle newRobotTable();
     DT_RespTableHandle newRobotFieldTable();
 	DT_ResponseClass newResponseClass( DT_RespTableHandle );
-	
 	
 
 	void removeReflexResponse( DT_RespTableHandle t, DT_ResponseClass c1, DT_ResponseClass c2 );
@@ -120,6 +122,7 @@ protected:
 	void evaluateRobotConstraints();
 	void computeCollisions();
 
+    
 	void run();				//!< Allows a thread to call computePose() periodically
 							/**< \note IMPORTANT: Call start() not run() !!! */
 	
@@ -136,6 +139,8 @@ protected:
 	bool encObstacle;
 	bool verbose;
 	bool syncGraphics;      //!< When true, the graphics and the model thread wait for each other. This makes the model thread slow, because it has to wait until the graphics thread finishes drawing. When false, the model thread runs without waiting for the graphics thread, which might cause the graphics thread to show dislocated joints.
+    
+    bool showFields;
 
     DT_RespTableHandle worldTable;
 	//QVector<DT_RespTableHandle> responseTables;		//!< Table 0 describes each robot w.r.t the world and the other robots. The rest are for robots' self-collision
@@ -159,7 +164,7 @@ protected:
 	QReadWriteLock mutexData;
 	QReadWriteLock mutexComputePose;
 
-	ObjectMover *objectMover;			//!< Object mover
+//	ObjectMover *objectMover;			//!< Object mover
 
 	friend class Robot;
 	friend class YarpRobot;

@@ -56,7 +56,8 @@ public slots:
 signals:
 	
 	//void addedDisplayList( PrimitiveObject* );
-	void reloadStuff();					//!< 
+    void toggleField();					//!<
+    void reloadStuff();					//!<
 	void renderStuff();					//!< Connect to RenderList.callLists() or anything that calls DisplayList.render()
     void xRotationChanged(int angle);	//!< see HelloGL example
     void yRotationChanged(int angle);	//!< see HelloGL example

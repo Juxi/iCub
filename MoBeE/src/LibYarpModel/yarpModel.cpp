@@ -5,15 +5,17 @@
  ******************************************************************/
 #include "yarpModel.h"
 #include "yarpRobot.h"
+#include "modelWindow.h"
 #include "robot.h"
 
 using namespace MoBeE;
 
-YarpModel::YarpModel( bool visualize ) : KinematicModel::Model(visualize)//, rpcIsOpen(false)
+YarpModel::YarpModel( bool visualize ) : KinematicModel::Model(visualize, false)//, rpcIsOpen(false)
 {
 	worldRpcInterface.setModel(this);
 	simSyncer.setModel(this);
 	//worldPort.setReader(rpcReader);
+    modelWindow->setWindowTitle("MoBeE w/ YARP");
 }
 YarpModel::~YarpModel()
 {
@@ -59,7 +61,6 @@ YarpRobot* YarpModel::loadYarpRobot( const QString& fileName, bool verbose )
     DT_RespTableHandle newFieldTable = newRobotFieldTable();	// a table for handling self repulsion
     
     
-
     YarpRobot* robot = new YarpRobot( this,
                                      newTable,
                                      newFieldTable,

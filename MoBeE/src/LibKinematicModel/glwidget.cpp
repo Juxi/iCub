@@ -133,13 +133,17 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_Up:    yRot -= zoom * 75; break;
         case Qt::Key_Down:  yRot += zoom * 75; break;
 
+
+        case 'F':   // toggle the visibility of the fields
+            emit toggleField();
+            break;
             
         case 'R': // reset the coordinate frame!
             setYRotation(0.0);
             setZRotation(0.0);
             setXRotation(0.0);
-            
             break;
+            
         case 'C': // show the coordingte frame
             showCS = !showCS;
             break;

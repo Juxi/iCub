@@ -96,8 +96,7 @@ public:
     DT_ResponseClass	getWorldBaseFieldClass() { return worldBaseFieldClass; }
     
 
-    const std::string getName() const { printf("robotName: %s\n", robotName.c_str());
-        return robotName; }				//!< Get the name of the Robot
+    const std::string getName() const { return robotName; }				//!< Get the name of the Robot
 	const QString*	getPartName( int partNum ) const;					//!< Get the name of a BodyPart, given its index (usually for printing messages) 
 	const QString*	getMotorName( int partNum, int motorNum ) const;		//!< Get the name of a Motor, given its index and the index of its body part
 	
@@ -113,7 +112,7 @@ public:
 	int	numBodyParts() const { return partList.size();}		//!< Returns the number of BodyParts currently in the list, which is also the index of the next one to be added
 	int numMotors() const { return motorList.size(); }	//!< Returns the number of Motors currently in the list, which is also the index of the next one to be added
 	
-    void setName( const QString& name )		{ /*myName = name;*/ robotName = name.toStdString(); printf(" set robotName: %s\n", getName().c_str()); }			//!< Sets a human readable name of the robot
+    void setName( const QString& name )		{ robotName = name.toStdString(); printf(" set robotName: %s\n", robotName.c_str()); }			//!< Sets a human readable name of the robot
     void appendBodyPart( BodyPart* part )	{ part->setIndex(partList.size()); partList.append(part); }		//!< Appends a BodyPart to the list
     void appendMotor( Motor* motor )		{ motorList.append(motor); }	//!< Appends a Motor to the list
     void resizeMotorList( int size )		{ motorList.resize(size); }		//!< Resizes the list of Motors
